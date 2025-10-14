@@ -1,8 +1,11 @@
 Minishell: Proyecto de Programación de Servicios y Procesos.
 
 Autores:
+
 David Perez : 
+
 Felipe Coronado : 
+
 Antoine Giz : https://github.com/Mango420x
 
 Este proyecto implementa un minishell en Java que simula el comportamiento básico de una terminal Linux.
