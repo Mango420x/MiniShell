@@ -1,23 +1,24 @@
-Minishell – Programación de Servicios y Procesos
+🐚 Minishell – Programación de Servicios y Procesos
 
-Autores: David Perez, Felipe Coronado & Antoine Giz
+Autor: (Tu nombre o grupo)
 Asignatura: Programación de Servicios y Procesos
 Lenguaje: Java
+Archivo principal: MiniShell.java
 
-Descripción
+🧩 Descripción
 
 Este proyecto implementa un minishell en Java que simula el comportamiento básico de una terminal Linux.
 Permite ejecutar comandos, usar pipes, redirecciones de entrada/salida y ejecutar procesos en segundo plano.
 
 El programa interpreta comandos introducidos por el usuario a través del prompt interactivo, los analiza mediante la clase Tokenizer y los ejecuta creando procesos hijos.
 
-Funcionalidades principales
+⚙️ Funcionalidades principales
 
 Ejecución de comandos con uno o varios argumentos.
 
 Pipes (|) entre procesos.
 
-Redirección de entrada, salida y errores:
+Redirección de entrada/salida/errores:
 
 < archivo → redirige la entrada estándar.
 
@@ -33,7 +34,7 @@ Comando interno cd, con rutas absolutas o relativas.
 
 Gestión de errores para comandos inválidos o problemas de redirección.
 
-Ejemplo de uso
+🚀 Ejemplo de uso
 # Ejecución simple
 > echo Hola Mundo
 
@@ -47,29 +48,24 @@ Ejemplo de uso
 > sleep 10 &
 [12345]
 
-Estructura y clases
+🧠 Estructura y clases
 
-MiniShell.java: Contiene la lógica principal del programa y la gestión de procesos.
+MiniShell.java → Contiene la lógica principal del programa y la gestión de procesos.
 
-Tokenizer.java: Proporcionada por el enunciado, se encarga de dividir la línea de comandos en tokens.
+Tokenizer.java → Proporcionada por el enunciado, se encarga de dividir la línea de comandos en tokens.
 
-TCommand / TLine / MissingFileException: Clases auxiliares del Tokenizer para representar y analizar los comandos.
+TCommand / TLine / MissingFileException → Clases auxiliares del Tokenizer para representar y analizar los comandos.
 
-Objetivos alcanzados
+🧪 Objetivos alcanzados
 
-Comandos en foreground y background.
+✅ Comandos en foreground y background
+✅ Redirecciones de entrada/salida
+✅ Pipes múltiples
+✅ Comando interno cd
+✅ Manejo de errores y excepciones
+✅ Código comentado y documentado
 
-Redirecciones de entrada y salida.
-
-Pipes múltiples.
-
-Comando interno cd.
-
-Manejo de errores y excepciones.
-
-Código comentado y documentado.
-
-Ejecución
+🧑‍💻 Ejecución
 
 Compilar y ejecutar desde la terminal:
 
