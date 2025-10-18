@@ -17,11 +17,12 @@ public class MiniShell {
         Scanner scanner = new Scanner(System.in);
 
         while (true) {
-            // Obtener el directorio actual (para imprimirlo en cada prompt).
+            // Obtener el directorio actual y el usuario del sistema (para imprimirlo en cada prompt).
             String cwd = System.getProperty("user.dir");
-
+            String user = System.getProperty("user.name");
+            
             // Mostrar el directorio actual
-            System.out.println(cwd + "> ");
+            System.out.println(user + "@:" + cwd + "$ ");
 
             // Leer una línea de texto introducida por el usuario.
             String input;
