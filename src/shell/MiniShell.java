@@ -22,7 +22,7 @@ public class MiniShell {
             String user = System.getProperty("user.name");
             
             // Mostrar el directorio actual
-            System.out.println(user + "@:" + cwd + "$ ");
+            System.out.print(user + "@:" + cwd + "$ > ");
 
             // Leer una línea de texto introducida por el usuario.
             String input;
@@ -136,6 +136,9 @@ public class MiniShell {
             newDir = new File(System.getProperty("user.dir"), target);
         }
 
+        try {
+            // Resuelve la ruta completa y la limpia.
+            newDir = newDir.getCanonicalFile();
         // Se verifica si el directorio existe y es válido.
         if (newDir.exists() && newDir.isDirectory()) {
             // Se cambia la propiedad del directorio actual.
@@ -143,6 +146,9 @@ public class MiniShell {
         } else {
             // Si no existe, se muestra un mensaje de error.
             System.err.println("cd: directorio no encontrado: " + target);
+        }
+        } catch (IOException e) {
+            System.err.println("cd: error al acceder al directorio: " + e.getMessage());
         }
     }
 
