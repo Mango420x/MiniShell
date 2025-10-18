@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Scanner;
 
-public class Minishell {
+public class MiniShell {
 
     public static void  main (String [] args) {
         // Creamos un Scanner para leer entradas de usuario en consola.
