@@ -244,7 +244,7 @@ public class MiniShell {
                         while ((length = is.read(buffer)) != -1) {
                             os.write(buffer, 0, length);
                         }
-                        // Asegura que todos los datos del bufer se envían.
+                        // Asegura que todos los datos del buffer se envían.
                         os.flush();
                     }
                 }
