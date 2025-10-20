@@ -5,8 +5,9 @@ import exceptions.MissingFileException;
 import tokenizer.TCommand;
 import tokenizer.TLine;
 import tokenizer.Tokenizer;
-import java.io.File;
-import java.io.IOException;
+
+import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -83,7 +84,7 @@ public class MiniShell {
                 }
                 // Si es un comando con pipes, *WIP*
                 else {
-                    System.err.println("Pipes *WIP*");
+                    pipes(tline);
                 }
             } catch (Exception e) {
                 // Capturar errores generales.
@@ -192,5 +193,89 @@ public class MiniShell {
             Thread.currentThread().interrupt();
             System.err.println("Ejecución interrumpida");
         }
+    }
+
+    // Metodo para ejecutar comandos con pipes |.
+    public static void pipes(TLine tline)   {
+        // Obtiene la lista de comandos individuales (TCommand) a partir de la línea completa.
+        List<TCommand> commands = tline.getCommands();
+        // Identifica el sistema operativo.
+        String ops = System.getProperty("os.name").toLowerCase();
+        // Almacena los procesos creados para cada comando en el orden de ejecución.
+        List<Process> processes = new ArrayList<>();
+        
+        try {
+            // Mantiene una referencia al proceso anterior.
+            Process previous = null;
+           
+           // Recorre cada comando en la lista de comandos.
+            for (TCommand current : commands) {
+
+                // Comando actual.
+                // Argumentos del comando actual.
+                List<String> argv = current.getArgv();
+                // Crea un ProcessBuilder según su SO.
+                ProcessBuilder pb;
+
+                if (ops.contains("win")) {
+                    // En Windows: usar cmd.exe /c para comandos internos
+                    pb = new ProcessBuilder("cmd.exe", "/c", String.join(" ", argv));
+                } else {
+                    // En Linux/macOS: ejecutar directamente
+                    pb = new ProcessBuilder(argv);
+                }
+                // Establece el directorio de trabajo del proceso.
+                pb.directory(new File(System.getProperty("user.dir")));
+
+                // Se inicia el proceso actual.
+                Process currentProcess = pb.start();
+
+                // En caso de que no sea el primer comando, se conecta la entrada del proceso actual a la salida del proceso anterior.
+                if (previous != null) {
+                    // Conecta la salida del proceso anterior a la entrada del proceso actual.
+                    try (
+                            InputStream is = previous.getInputStream();
+                            OutputStream os = currentProcess.getOutputStream()
+                    ) {
+                        // Buffer temporal para transferir los datos entre procesos.
+                        byte[] buffer = new byte[1024];
+                        int length;
+                        // Lee datos del proceso anterior y los escribe en el siguiente.
+                        while ((length = is.read(buffer)) != -1) {
+                            os.write(buffer, 0, length);
+                        }
+                        // Asegura que todos los datos del bufer se envían.
+                        os.flush();
+                    }
+                }
+                // Añade el proceso actual a la lista de procesos.
+                processes.add(currentProcess);
+                previous = currentProcess;
+
+            }
+              // Espera al último proceso a completar.
+              Process last = processes.get(processes.size() - 1);
+              last.waitFor();
+
+              // Captura y muestra la salida del último proceso.  
+              try (BufferedReader br = new BufferedReader(new InputStreamReader(last.getInputStream()))) {
+                String line;
+                
+                while((line = br.readLine()) != null) {
+        
+                    System.out.println(line);
+        
+                }
+              }
+              // Espera a que todos los procesos del pipe terminen correctamente.     
+              for (Process p : processes) {
+                p.waitFor();
+              }
+
+        } catch (InterruptedException | IOException e) {
+            System.err.println("Error en la ejecución del comando: " + e.getMessage());;
+
+        }
+
     }
 }
