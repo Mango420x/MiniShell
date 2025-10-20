@@ -193,4 +193,80 @@ public class MiniShell {
             System.err.println("Ejecución interrumpida");
         }
     }
+
+    // Metodo para ejecutar comandos con pipes |.
+    public static void pipes(Tline tline)   {
+        // Obtiene la lista de comandos individuales (TCommand) a partir de la línea completa.
+        List<TCommand> commands = tline.getCommands();
+        // Identifica el sistema operativo.
+        String os = System.getProperty("os.name").toLowerCase();
+        // Almacena los procesos creados para cada comando en el orden de ejecución.
+        List<Process> processes = new ArrayList<>();
+        
+        try {
+            // Mantiene una referencia al proceso anterior.
+            Process previous = null;
+           
+           // Recorre cada comando en la lista de comandos.
+           for (int i = 0; i < commands.size(); i++) {
+            
+            // Comando actual.
+            TCommand current = commands.get(i);
+            // Argumentos del comando actual.
+            List<String> argv = current.getArgv();
+            // Crea un ProcessBuilder para el comando actual.
+            ProcessBuilder pb = new ProcessBuilder(argv);
+            // Establece el directorio de trabajo del proceso.
+            pb.directory(new File(System.getProperty("user.dir")));
+
+            // En caso de que no sea el primer comando, se conecta la entrada del proceso actual a la salida del proceso anterior.
+            if (previous != null) {
+                // Empieza el siguiente proceso.
+                Process next = pb.start();
+                // Conecta la salida del proceso anterior a la entrada del proceso actual.
+                try (                   
+                    InputStream is = previous.getInputStream();                   
+                     OutputStream os = next.getOutputStream()                  
+                     ) {
+                    // Buffer temporal para transferir los datos entre procesos.
+                    byte[] buffer = new byte[1024];
+                    int length;
+                     // Lee datos del proceso anterior y los escribe en el siguiente.
+                    while ((length = is.read(buffer)) != -1) {
+                        os.write(buffer, 0, length);
+                    }
+                    // Asegura que todos los datos del bufer se envían.
+                    os.flush();
+                }
+                // Añade el proceso actual a la lista de procesos.
+                processes.add(next);
+                previous = next;
+            } else {
+                // En caso de ser el primer comando, simplemente inicia el proceso.
+                previous = pb.start();
+                processes.add(previous);
+            }
+
+           }
+              // Espera al último proceso a completar.
+              Process last = processes.get(processes.size() - 1);
+              last.waitFor();
+
+              // Captura y muestra la salida del último proceso.  
+              try (BufferedReader br = new BufferedReader(new InputStreamReader(last.getInputStream()))) {
+                String line;
+                
+                while((line = br.readLine()) != null) {
+        
+                    System.out.println(line);
+        
+                }
+              }
+              // Espera a que todos los procesos del pipe terminen correctamente.     
+              for (Process p : processes) {
+                p.waitFor();
+              }
+        }
+
+    }
 }
