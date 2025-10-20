@@ -209,51 +209,50 @@ public class MiniShell {
             Process previous = null;
            
            // Recorre cada comando en la lista de comandos.
-           for (int i = 0; i < commands.size(); i++) {
-            
-            // Comando actual.
-               TCommand current = commands.get(i);
-            // Argumentos del comando actual.
-               List<String> argv = current.getArgv();
-            // Crea un ProcessBuilder según su SO.
-               ProcessBuilder pb;
+            for (TCommand current : commands) {
 
-               if (ops.contains("win")) {
-                   // En Windows: usar cmd.exe /c para comandos internos
-                   pb = new ProcessBuilder("cmd.exe", "/c", String.join(" ", argv));
-               } else {
-                   // En Linux/macOS: ejecutar directamente
-                   pb = new ProcessBuilder(argv);
-               }
-            // Establece el directorio de trabajo del proceso.
-            pb.directory(new File(System.getProperty("user.dir")));
+                // Comando actual.
+                // Argumentos del comando actual.
+                List<String> argv = current.getArgv();
+                // Crea un ProcessBuilder según su SO.
+                ProcessBuilder pb;
 
-            // Se inicia el proceso actual.
-            Process currentProcess = pb.start();
-
-            // En caso de que no sea el primer comando, se conecta la entrada del proceso actual a la salida del proceso anterior.
-            if (previous != null) {
-                // Conecta la salida del proceso anterior a la entrada del proceso actual.
-                try (
-                        InputStream is = previous.getInputStream();
-                        OutputStream os = currentProcess.getOutputStream()
-                ) {
-                    // Buffer temporal para transferir los datos entre procesos.
-                    byte[] buffer = new byte[1024];
-                    int length;
-                    // Lee datos del proceso anterior y los escribe en el siguiente.
-                    while ((length = is.read(buffer)) != -1) {
-                        os.write(buffer, 0, length);
-                    }
-                    // Asegura que todos los datos del bufer se envían.
-                    os.flush();
+                if (ops.contains("win")) {
+                    // En Windows: usar cmd.exe /c para comandos internos
+                    pb = new ProcessBuilder("cmd.exe", "/c", String.join(" ", argv));
+                } else {
+                    // En Linux/macOS: ejecutar directamente
+                    pb = new ProcessBuilder(argv);
                 }
-            }
+                // Establece el directorio de trabajo del proceso.
+                pb.directory(new File(System.getProperty("user.dir")));
+
+                // Se inicia el proceso actual.
+                Process currentProcess = pb.start();
+
+                // En caso de que no sea el primer comando, se conecta la entrada del proceso actual a la salida del proceso anterior.
+                if (previous != null) {
+                    // Conecta la salida del proceso anterior a la entrada del proceso actual.
+                    try (
+                            InputStream is = previous.getInputStream();
+                            OutputStream os = currentProcess.getOutputStream()
+                    ) {
+                        // Buffer temporal para transferir los datos entre procesos.
+                        byte[] buffer = new byte[1024];
+                        int length;
+                        // Lee datos del proceso anterior y los escribe en el siguiente.
+                        while ((length = is.read(buffer)) != -1) {
+                            os.write(buffer, 0, length);
+                        }
+                        // Asegura que todos los datos del bufer se envían.
+                        os.flush();
+                    }
+                }
                 // Añade el proceso actual a la lista de procesos.
                 processes.add(currentProcess);
                 previous = currentProcess;
 
-           }
+            }
               // Espera al último proceso a completar.
               Process last = processes.get(processes.size() - 1);
               last.waitFor();
@@ -273,11 +272,9 @@ public class MiniShell {
                 p.waitFor();
               }
 
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+        } catch (InterruptedException | IOException e) {
+            System.err.println("Error en la ejecución del comando: " + e.getMessage());;
 
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
 
     }
