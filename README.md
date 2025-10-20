@@ -4,7 +4,7 @@ Autores:
 
 David Perez : 
 
-Felipe Coronado : 
+Felipe Coronado : https://github.com/sargon494
 
 Antoine Giz : https://github.com/Mango420x
 
