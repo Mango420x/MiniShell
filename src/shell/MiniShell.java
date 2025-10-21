@@ -5,7 +5,6 @@ import exceptions.MissingFileException;
 import tokenizer.TCommand;
 import tokenizer.TLine;
 import tokenizer.Tokenizer;
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -279,19 +278,18 @@ public class MiniShell {
         }
     }
 
-    // Metodo para poder ejecutar comandos simples con redirecciones y ejjecucion de background.
+    // Metodo para poder ejecutar comandos simples con redirecciones y ejecución de background.
 
     public static void executesimplewithredandbackground(TLine tLine) {
         TCommand command = tLine.getCommands().getFirst();
         List<String> argv = command.getArgv();
 
-        //Si no hay redirecciones ni se ejecuta en backgroun se manda al executeSimple, para no tener que cambiar el main mucho.
+        //Si no hay redirecciones ni se ejecuta en backgroun se manda al executeSimple.
         if (tLine.getRedirectError() == null && tLine.getRedirectOutput() == null && !tLine.isBackground()) {
             executeSimple(tLine);
             return;
         }
-        //Igual que en el executesimple , se gestiona el sistema operativo para poder probarlo en casa con windows
-        // Identificar el sistema operativo para realizar una lógica distinta en caso de ser Windows, para poder probarlo en casa.
+        // Identificar el sistema operativo para realizar una lógica distinta en caso de ser Windows.
         String os = System.getProperty("os.name").toLowerCase();
 
         // Se declara un ProcessBuilder
@@ -310,13 +308,13 @@ public class MiniShell {
         pb.inheritIO();
 
 
-        //Antes de nada , se maneja las redirecciones de entrada , en este caso <
+        // Antes de nada, se maneja las redirecciones de entrada, en este caso <
         if (tLine.getRedirectInput() != null) {
-            //Se crea un objeto file para lo que leera de entrada
+            //Se crea un objeto file para lo que leerá de entrada
             File inputfile = new File(tLine.getRedirectInput());
             pb.redirectInput(inputfile);
         }
-        //Se manejan las redirecciones de salida > y >>
+        // Se manejan las redirecciones de salida > y >>
         if (tLine.getRedirectOutput() != null) {
             File outputfile = new File(tLine.getRedirectOutput());
             //Se maneja si es un append o sobrescribir
@@ -324,7 +322,7 @@ public class MiniShell {
                 // Se hace >> (Usando el .Redirect.appendto)
                 pb.redirectOutput(ProcessBuilder.Redirect.appendTo(outputfile));
             } else {
-                //Se sobrescribe > (Usando el .redirect.to)
+                // Se sobrescribe > (Usando el .Redirect.to)
                 pb.redirectOutput(ProcessBuilder.Redirect.to(outputfile));
             }
         }
@@ -333,12 +331,12 @@ public class MiniShell {
             pb.redirectError(errorfile);
         }
 
-        //Se inicia el proceso
+        // Se inicia el proceso
         try {
             Process p1 = pb.start();
-        //Se controla si esta en background, si es true que el comando esta en background no se ejecuta un waitfor para esperarle.
+        // Se controla si esta en background, si es true que el comando esta en background no se ejecuta un waitfor para esperarle.
             if (tLine.isBackground()) {
-                //Se muestra el pid del comando si esta en background
+                //Se muestra el pid del comando si está en background
                 System.out.println("Proceso en background iniciado " + p1.pid());
             } else {
                 //Se espera hasta que acabe el proceso para poder usar el shell
