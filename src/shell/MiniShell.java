@@ -5,6 +5,7 @@ import exceptions.MissingFileException;
 import tokenizer.TCommand;
 import tokenizer.TLine;
 import tokenizer.Tokenizer;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.Scanner;
 
 public class MiniShell {
 
-    public static void main(String[] args) {
+    public static void  main (String [] args) {
         // Creamos un Scanner para leer entradas de usuario en consola.
         Scanner scanner = new Scanner(System.in);
 
@@ -20,7 +21,7 @@ public class MiniShell {
             // Obtener el directorio actual y el usuario del sistema (para imprimirlo en cada prompt).
             String cwd = System.getProperty("user.dir");
             String user = System.getProperty("user.name");
-
+            
             // Mostrar el directorio actual
             System.out.print(user + "@:" + cwd + "$ > ");
 
@@ -79,7 +80,7 @@ public class MiniShell {
                 }
                 // Si es un comando sin pipes, se ejecuta con el ProcessBuilder.
                 else if (tline.getNcommands() == 1) {
-                    executesimplewithredandbackground(tline);
+                    executeSimple(tline);
                 }
                 // Si es un comando con pipes, *WIP*
                 else {
@@ -139,14 +140,14 @@ public class MiniShell {
         try {
             // Resuelve la ruta completa y la limpia.
             newDir = newDir.getCanonicalFile();
-            // Se verifica si el directorio existe y es válido.
-            if (newDir.exists() && newDir.isDirectory()) {
-                // Se cambia la propiedad del directorio actual.
-                System.setProperty("user.dir", newDir.getAbsolutePath());
-            } else {
-                // Si no existe, se muestra un mensaje de error.
-                System.err.println("cd: directorio no encontrado: " + target);
-            }
+        // Se verifica si el directorio existe y es válido.
+        if (newDir.exists() && newDir.isDirectory()) {
+            // Se cambia la propiedad del directorio actual.
+            System.setProperty("user.dir", newDir.getAbsolutePath());
+        } else {
+            // Si no existe, se muestra un mensaje de error.
+            System.err.println("cd: directorio no encontrado: " + target);
+        }
         } catch (IOException e) {
             System.err.println("cd: error al acceder al directorio: " + e.getMessage());
         }
@@ -158,7 +159,7 @@ public class MiniShell {
         TCommand command = tline.getCommands().getFirst();
         List<String> argv = command.getArgv();
 
-        // Identificar el sistema operativo para realizar una lógica distinta en caso de ser Windows, para poder probarlo en casa.
+        // Identificar el sistema operativo para realizar una lógica distinta en caso de ser Windows.
         String os = System.getProperty("os.name").toLowerCase();
 
         // Se declara un ProcessBuilder
@@ -195,19 +196,19 @@ public class MiniShell {
     }
 
     // Metodo para ejecutar comandos con pipes |.
-    public static void pipes(TLine tline) {
+    public static void pipes(TLine tline)   {
         // Obtiene la lista de comandos individuales (TCommand) a partir de la línea completa.
         List<TCommand> commands = tline.getCommands();
         // Identifica el sistema operativo.
         String ops = System.getProperty("os.name").toLowerCase();
         // Almacena los procesos creados para cada comando en el orden de ejecución.
         List<Process> processes = new ArrayList<>();
-
+        
         try {
             // Mantiene una referencia al proceso anterior.
             Process previous = null;
-
-            // Recorre cada comando en la lista de comandos.
+           
+           // Recorre cada comando en la lista de comandos.
             for (TCommand current : commands) {
 
                 // Comando actual.
@@ -252,104 +253,29 @@ public class MiniShell {
                 previous = currentProcess;
 
             }
-            // Espera al último proceso a completar.
-            Process last = processes.get(processes.size() - 1);
-            last.waitFor();
+              // Espera al último proceso a completar.
+              Process last = processes.get(processes.size() - 1);
+              last.waitFor();
 
-            // Captura y muestra la salida del último proceso.
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(last.getInputStream()))) {
+              // Captura y muestra la salida del último proceso.  
+              try (BufferedReader br = new BufferedReader(new InputStreamReader(last.getInputStream()))) {
                 String line;
-
-                while ((line = br.readLine()) != null) {
-
+                
+                while((line = br.readLine()) != null) {
+        
                     System.out.println(line);
-
+        
                 }
-            }
-            // Espera a que todos los procesos del pipe terminen correctamente.
-            for (Process p : processes) {
+              }
+              // Espera a que todos los procesos del pipe terminen correctamente.     
+              for (Process p : processes) {
                 p.waitFor();
-            }
+              }
 
         } catch (InterruptedException | IOException e) {
-            System.err.println("Error en la ejecución del comando: " + e.getMessage());
-            
+            System.err.println("Error en la ejecución del comando: " + e.getMessage());;
 
         }
-    }
 
-    // Metodo para poder ejecutar comandos simples con redirecciones y ejecución de background.
-
-    public static void executesimplewithredandbackground(TLine tLine) {
-        TCommand command = tLine.getCommands().getFirst();
-        List<String> argv = command.getArgv();
-
-        //Si no hay redirecciones ni se ejecuta en backgroun se manda al executeSimple.
-        if (tLine.getRedirectError() == null && tLine.getRedirectOutput() == null && !tLine.isBackground()) {
-            executeSimple(tLine);
-            return;
-        }
-        // Identificar el sistema operativo para realizar una lógica distinta en caso de ser Windows.
-        String os = System.getProperty("os.name").toLowerCase();
-
-        // Se declara un ProcessBuilder
-        ProcessBuilder pb;
-
-        if (os.contains("win")) {
-            // En caso del sistema operativo ser windows se añade al argumento los prefijos cmd.exe y /c para que se puedan ejecutar comandos directamente.
-            pb = new ProcessBuilder("cmd.exe", "/c", String.join(" ", argv));
-        } else {
-            // Si no es Windows se crea normalmente.
-            pb = new ProcessBuilder(argv);
-        }
-        // Establecer el directorio actual.
-        pb.directory(new File(System.getProperty("user.dir")));
-        // Heredamos la entrada/salida del proceso actual (para verlo en consola).
-        pb.inheritIO();
-
-
-        // Antes de nada, se maneja las redirecciones de entrada, en este caso <
-        if (tLine.getRedirectInput() != null) {
-            //Se crea un objeto file para lo que leerá de entrada
-            File inputfile = new File(tLine.getRedirectInput());
-            pb.redirectInput(inputfile);
-        }
-        // Se manejan las redirecciones de salida > y >>
-        if (tLine.getRedirectOutput() != null) {
-            File outputfile = new File(tLine.getRedirectOutput());
-            //Se maneja si es un append o sobrescribir
-            if (tLine.isAppendOutput()) {
-                // Se hace >> (Usando el .Redirect.appendto)
-                pb.redirectOutput(ProcessBuilder.Redirect.appendTo(outputfile));
-            } else {
-                // Se sobrescribe > (Usando el .Redirect.to)
-                pb.redirectOutput(ProcessBuilder.Redirect.to(outputfile));
-            }
-        }
-        if (tLine.getRedirectError() != null) {
-            File errorfile = new File(tLine.getRedirectError());
-            pb.redirectError(errorfile);
-        }
-
-        // Se inicia el proceso
-        try {
-            Process p1 = pb.start();
-        // Se controla si esta en background, si es true que el comando esta en background no se ejecuta un waitfor para esperarle.
-            if (tLine.isBackground()) {
-                //Se muestra el pid del comando si está en background
-                System.out.println("Proceso en background iniciado " + p1.pid());
-            } else {
-                //Se espera hasta que acabe el proceso para poder usar el shell
-                int n = p1.waitFor();
-                if (n != 0) {
-                    System.out.println("Proceso finalizado : " + n);
-                }
-            }
-        } catch (IOException e) {
-            System.err.println("Fallo al ejecutar: " + argv.getFirst() + " - " + e.getMessage());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            System.err.println("Ejecución interrumpida");
-        }
     }
 }
