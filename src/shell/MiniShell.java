@@ -80,7 +80,7 @@ public class MiniShell {
                 }
                 // Si es un comando sin pipes, se ejecuta con el ProcessBuilder.
                 else if (tline.getNcommands() == 1) {
-                    executeSimple(tline);
+                    executesimplewithredandbackground(tline);
                 }
                 // Si es un comando con pipes, *WIP*
                 else {
