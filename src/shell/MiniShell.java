@@ -80,7 +80,7 @@ public class MiniShell {
                 }
                 // Si es un comando sin pipes, se ejecuta con el ProcessBuilder.
                 else if (tline.getNcommands() == 1) {
-                    executeSimple(tline);
+                    executesimplewithredandbackground(tline);
                 }
                 // Si es un comando con pipes, *WIP*
                 else {
@@ -278,4 +278,79 @@ public class MiniShell {
         }
 
     }
+     public static void executesimplewithredandbackground(TLine tLine) {
+        TCommand command = tLine.getCommands().getFirst();
+        List<String> argv = command.getArgv();
+
+        //Si no hay redirecciones ni se ejecuta en backgroun se manda al executeSimple, para no tener que cambiar el main mucho.
+        if (tLine.getRedirectError() == null && tLine.getRedirectOutput() == null && !tLine.isBackground()) {
+            executeSimple(tLine);
+            return;
+        }
+        //Igual que en el executesimple , se gestiona el sistema operativo para poder probarlo en casa con windows
+        // Identificar el sistema operativo para realizar una lógica distinta en caso de ser Windows, para poder probarlo en casa.
+        String os = System.getProperty("os.name").toLowerCase();
+
+        // Se declara un ProcessBuilder
+        ProcessBuilder pb;
+            System.err.println("Error en la ejecución del comando: " + e.getMessage());;
+
+        if (os.contains("win")) {
+            // En caso del sistema operativo ser windows se añade al argumento los prefijos cmd.exe y /c para que se puedan ejecutar comandos directamente.
+            pb = new ProcessBuilder("cmd.exe", "/c", String.join(" ", argv));
+        } else {
+            // Si no es Windows se crea normalmente.
+            pb = new ProcessBuilder(argv);
+        }
+        // Establecer el directorio actual.
+        pb.directory(new File(System.getProperty("user.dir")));
+        // Heredamos la entrada/salida del proceso actual (para verlo en consola).
+        pb.inheritIO();
+
+
+        //Antes de nada , se maneja las redirecciones de entrada , en este caso <
+        if (tLine.getRedirectInput() != null) {
+            //Se crea un objeto file para lo que leera de entrada
+            File inputfile = new File(tLine.getRedirectInput());
+            pb.redirectInput(inputfile);
+        }
+        //Se manejan las redirecciones de salida > y >>
+        if (tLine.getRedirectOutput() != null) {
+            File outputfile = new File(tLine.getRedirectOutput());
+            //Se maneja si es un append o sobrescribir
+            if (tLine.isAppendOutput()) {
+                // Se hace >> (Usando el .Redirect.appendto)
+                pb.redirectOutput(ProcessBuilder.Redirect.appendTo(outputfile));
+            } else {
+                //Se sobrescribe > (Usando el .redirect.to)
+                pb.redirectOutput(ProcessBuilder.Redirect.to(outputfile));
+            }
+        }
+        if (tLine.getRedirectError() != null) {
+            File errorfile = new File(tLine.getRedirectError());
+            pb.redirectError(errorfile);
+        }
+
+        //Se inicia el proceso
+        try {
+            Process p1 = pb.start();
+        //Se controla si esta en background, si es true que el comando esta en background no se ejecuta un waitfor para esperarle.
+            if (tLine.isBackground()) {
+                //Se muestra el pid del comando si esta en background
+                System.out.println("Proceso en background iniciado " + p1.pid());
+            } else {
+                //Se espera hasta que acabe el proceso para poder usar el shell
+                int n = p1.waitFor();
+                if (n != 0) {
+                    System.out.println("Proceso finalizado : " + n);
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Fallo al ejecutar: " + argv.getFirst() + " - " + e.getMessage());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.err.println("Ejecución interrumpida");
+        }
+    }
+}
 }
