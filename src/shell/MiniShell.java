@@ -5,7 +5,6 @@ import exceptions.MissingFileException;
 import tokenizer.TCommand;
 import tokenizer.TLine;
 import tokenizer.Tokenizer;
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -80,7 +79,7 @@ public class MiniShell {
                 }
                 // Si es un comando sin pipes, se ejecuta con el ProcessBuilder.
                 else if (tline.getNcommands() == 1) {
-                    executesimplewithredandbackground(tline);
+                    executeSimpleWithRedAndBackground(tline);
                 }
                 // Si es un comando con pipes, *WIP*
                 else {
@@ -104,14 +103,14 @@ public class MiniShell {
         }
 
         // Obtener el primer comando de la línea y si el nombre coincide con "cd".
-        TCommand command = tline.getCommands().get(0);
+        TCommand command = tline.getCommands().getFirst();
         return "cd".equals(command.getFilename());
     }
 
     // Metodo para implementar el comando "cd" para cambiar directorios.
     public static void executeCD(TLine tline) {
         // Obtener el comando "cd" y sus argumentos.
-        TCommand command = tline.getCommands().get(0);
+        TCommand command = tline.getCommands().getFirst();
         List<String> argv = command.getArgv();
 
         String target;
@@ -184,13 +183,12 @@ public class MiniShell {
             Process p = pb.start();
 
             // Esperar a que termine y obtener el código de salida.
-            int code = p.waitFor();
+            p.waitFor();
         } catch (IOException e) {
             // Si el comando no existe o falla.
             System.err.println("Fallo al ejecutar: " + argv.getFirst() + " - " + e.getMessage());
         } catch (InterruptedException e) {
             // Si el proceso es interrumpido.
-            Thread.currentThread().interrupt();
             System.err.println("Ejecución interrumpida");
         }
     }
@@ -254,7 +252,7 @@ public class MiniShell {
 
             }
               // Espera al último proceso a completar.
-              Process last = processes.get(processes.size() - 1);
+              Process last = processes.getLast();
               last.waitFor();
 
               // Captura y muestra la salida del último proceso.  
@@ -271,29 +269,25 @@ public class MiniShell {
               for (Process p : processes) {
                 p.waitFor();
               }
-
         } catch (InterruptedException | IOException e) {
-            System.err.println("Error en la ejecución del comando: " + e.getMessage());;
-
+            System.err.println("Error en la ejecución del comando: " + e.getMessage());
         }
 
     }
-     public static void executesimplewithredandbackground(TLine tLine) {
+     public static void executeSimpleWithRedAndBackground(TLine tLine) {
         TCommand command = tLine.getCommands().getFirst();
         List<String> argv = command.getArgv();
 
-        //Si no hay redirecciones ni se ejecuta en backgroun se manda al executeSimple, para no tener que cambiar el main mucho.
+        //Si no hay redirecciones ni se ejecuta en background se manda al executeSimple.
         if (tLine.getRedirectError() == null && tLine.getRedirectOutput() == null && !tLine.isBackground()) {
             executeSimple(tLine);
             return;
         }
-        //Igual que en el executesimple , se gestiona el sistema operativo para poder probarlo en casa con windows
-        // Identificar el sistema operativo para realizar una lógica distinta en caso de ser Windows, para poder probarlo en casa.
+        // Identificar el sistema operativo para realizar una lógica distinta en caso de ser Windows.
         String os = System.getProperty("os.name").toLowerCase();
 
         // Se declara un ProcessBuilder
         ProcessBuilder pb;
-            System.err.println("Error en la ejecución del comando: " + e.getMessage());;
 
         if (os.contains("win")) {
             // En caso del sistema operativo ser windows se añade al argumento los prefijos cmd.exe y /c para que se puedan ejecutar comandos directamente.
@@ -302,15 +296,16 @@ public class MiniShell {
             // Si no es Windows se crea normalmente.
             pb = new ProcessBuilder(argv);
         }
+
         // Establecer el directorio actual.
         pb.directory(new File(System.getProperty("user.dir")));
         // Heredamos la entrada/salida del proceso actual (para verlo en consola).
         pb.inheritIO();
 
 
-        //Antes de nada , se maneja las redirecciones de entrada , en este caso <
+        //Antes de nada, se maneja las redirecciones de entrada, en este caso <
         if (tLine.getRedirectInput() != null) {
-            //Se crea un objeto file para lo que leera de entrada
+            //Se crea un objeto file para lo que leerá de entrada
             File inputfile = new File(tLine.getRedirectInput());
             pb.redirectInput(inputfile);
         }
@@ -319,10 +314,10 @@ public class MiniShell {
             File outputfile = new File(tLine.getRedirectOutput());
             //Se maneja si es un append o sobrescribir
             if (tLine.isAppendOutput()) {
-                // Se hace >> (Usando el .Redirect.appendto)
+                // Se hace >> (Usando el Redirect.appendTo)
                 pb.redirectOutput(ProcessBuilder.Redirect.appendTo(outputfile));
             } else {
-                //Se sobrescribe > (Usando el .redirect.to)
+                //Se sobrescribe > (Usando el Redirect.to)
                 pb.redirectOutput(ProcessBuilder.Redirect.to(outputfile));
             }
         }
@@ -334,9 +329,9 @@ public class MiniShell {
         //Se inicia el proceso
         try {
             Process p1 = pb.start();
-        //Se controla si esta en background, si es true que el comando esta en background no se ejecuta un waitfor para esperarle.
+        //Se controla si esta en background, si es true no se ejecuta un waitFor para esperarle.
             if (tLine.isBackground()) {
-                //Se muestra el pid del comando si esta en background
+                //Se muestra el pid del comando si está en background
                 System.out.println("Proceso en background iniciado " + p1.pid());
             } else {
                 //Se espera hasta que acabe el proceso para poder usar el shell
@@ -348,9 +343,7 @@ public class MiniShell {
         } catch (IOException e) {
             System.err.println("Fallo al ejecutar: " + argv.getFirst() + " - " + e.getMessage());
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
             System.err.println("Ejecución interrumpida");
         }
     }
 }
-
