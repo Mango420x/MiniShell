@@ -2,7 +2,7 @@ Minishell: Proyecto de Programación de Servicios y Procesos.
 
 Autores:
 
-David Perez : 
+David Perez : https://github.com/DavidPP161
 
 Felipe Coronado : https://github.com/sargon494
 
