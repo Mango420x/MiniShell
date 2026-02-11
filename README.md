@@ -38,7 +38,7 @@ Ejecución
 
 Clona el repositorio:
 
-    git clone https://github.com/sargon494/Minishell.git
+    git clone https://github.com/Mango420x/Minishell.git
 
 Compila el proyecto:
 
